@@ -1,0 +1,30 @@
+{
+  "name": "zepp-heart-location-sync",
+  "version": "1.0.0",
+  "description": "心率与地理位置实时同步应用，适配Amazfit T-Rex 3",
+  "main": "page/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node preview-server.js",
+    "start": "node preview-server.js",
+    "build": "zeus dev",
+    "preview": "zeus preview"
+  },
+  "keywords": ["zepp", "heart-rate", "location", "sync", "amazfit", "t-rex-3"],
+  "author": "Zepp Health",
+  "license": "MIT",
+  "devDependencies": {
+    "@zeppos/device-types": "^3.6.0",
+    "@zeppos/zeus-cli": "^1.2.0"
+  },
+  "dependencies": {
+    "@zeppos/zml": "^3.6.0",
+    "@zos/app": "^3.6.0",
+    "@zos/sensor": "^3.6.0",
+    "@zos/ui": "^3.6.0",
+    "@zos/utils": "^3.6.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
