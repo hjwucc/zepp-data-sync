@@ -3,6 +3,7 @@ import { HeartRate, Geolocation, checkSensor } from '@zos/sensor'
 import { localStorage } from '@zos/storage'
 import { log as Logger } from '@zos/utils'
 import { getDeviceInfo } from '@zos/device'
+import { pauseDropWristScreenOff, resetDropWristScreenOff, setPageBrightTime, resetPageBrightTime } from '@zos/display'
 import { BasePage } from '@zeppos/zml/base-page'
 
 const logger = Logger.getLogger('heart-rate-location-sync')
@@ -597,6 +598,27 @@ Page(
           this.startLocationStatusCheck()
         }
         
+        // 暂停落腕息屏行为并设置24小时亮屏时间
+        try {
+          // 暂停落腕息屏行为，duration设为0表示一直暂停直到调用resetDropWristScreenOff
+          const pauseResult = pauseDropWristScreenOff({ duration: 0 })
+          if (pauseResult === 0) {
+            logger.debug('落腕息屏已暂停')
+          } else {
+            logger.error('暂停落腕息屏失败，返回值:', pauseResult)
+          }
+          
+          // 设置当前页面屏幕亮屏时间为24小时（24 * 60 * 60 * 1000 = 86400000毫秒）
+          const brightResult = setPageBrightTime({ brightTime: 86400000 })
+          if (brightResult === 0) {
+            logger.debug('屏幕亮屏时间已设置为24小时')
+          } else {
+            logger.error('设置屏幕亮屏时间失败，返回值:', brightResult)
+          }
+        } catch (displayError) {
+          logger.error('屏幕管理设置失败:', displayError)
+        }
+        
         logger.debug('自动同步启动成功')
       } else {
         this.updateStatusDisplay('传感器启动失败')
@@ -634,6 +656,27 @@ Page(
       
       // 停止定期检查
       this.stopLocationStatusCheck()
+      
+      // 恢复落腕息屏行为并取消亮屏时间设置
+      try {
+        // 恢复落腕息屏行为
+        const resetDropResult = resetDropWristScreenOff()
+        if (resetDropResult === 0) {
+          logger.debug('落腕息屏行为已恢复')
+        } else {
+          logger.error('恢复落腕息屏行为失败，返回值:', resetDropResult)
+        }
+        
+        // 取消setPageBrightTime设置的亮屏时间
+        const resetBrightResult = resetPageBrightTime()
+        if (resetBrightResult === 0) {
+          logger.debug('屏幕亮屏时间设置已取消')
+        } else {
+          logger.error('取消屏幕亮屏时间设置失败，返回值:', resetBrightResult)
+        }
+      } catch (displayError) {
+        logger.error('屏幕管理恢复失败:', displayError)
+      }
       
       logger.debug('停止自动同步')
     } catch (error) {
@@ -884,6 +927,23 @@ Page(
           this.sensors.geolocation.offEnableChange(this.enableChangeCallback)
         }
         logger.debug('位置传感器已停止并清理')
+      }
+      
+      // 确保恢复屏幕管理设置，避免设置残留
+      try {
+        // 恢复落腕息屏行为
+        const resetDropResult = resetDropWristScreenOff()
+        if (resetDropResult === 0) {
+          logger.debug('页面销毁时落腕息屏行为已恢复')
+        }
+        
+        // 取消setPageBrightTime设置的亮屏时间
+        const resetBrightResult = resetPageBrightTime()
+        if (resetBrightResult === 0) {
+          logger.debug('页面销毁时屏幕亮屏时间设置已取消')
+        }
+      } catch (displayError) {
+        logger.error('页面销毁时屏幕管理恢复失败:', displayError)
       }
       
       logger.debug('页面资源清理完成')
